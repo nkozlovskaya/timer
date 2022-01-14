@@ -1,25 +1,70 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { Component } from "react";
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
+import "./App.css";
+
+class App extends Component {
+  state = {
+    count: 0,
+    isCounting: false,
+  };
+
+  componentDidMount() {
+    const userCount = localStorage.getItem("timer");
+    if (userCount) {
+      this.setState({ count: +userCount });
+    }
+  }
+
+  componentDidUpdate() {
+    localStorage.setItem("timer", this.state.count);
+  }
+
+  componentWillUnmount() {
+    clearInterval(this.counterId);
+  }
+
+  handleStart = () => {
+    this.setState({ isCounting: true });
+    this.counterId = setInterval(() => {
+      this.setState({ count: this.state.count + 1 });
+    }, 1000);
+  };
+
+  handleStop = () => {
+    this.setState({ isCounting: false });
+    clearInterval(this.counterId);
+  };
+
+  handleReset = () => {
+    this.setState({ isCounting: false, count: 0 });
+    clearInterval(this.counterId);
+  };
+
+  render() {
+    return (
+      <div className="App">
+        <h1>React Timer</h1>
+        <h2>{this.state.count}</h2>
+        {!this.state.isCounting ? (
+          <button onClick={this.handleStart} className="btn btn-primary">
+            Start
+          </button>
+        ) : (
+          <button onClick={this.handleStop} className="btn btn-danger">
+            Stop
+          </button>
+        )}
+
+        <button
+          onClick={this.handleReset}
+          className="btn btn-warning"
+          style={{ marginLeft: "2rem" }}
         >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+          Reset
+        </button>
+      </div>
+    );
+  }
 }
 
 export default App;
