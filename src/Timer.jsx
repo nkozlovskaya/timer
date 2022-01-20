@@ -1,6 +1,31 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useEffect, useReducer } from "react";
 
-import "./App.css";
+const countReduser = (state, { type }) => {
+  switch (type) {
+    case "START":
+      return {
+        ...state,
+        isCounting: true,
+      };
+    case "STOP":
+      return {
+        ...state,
+        isCounting: false,
+      };
+    case "RESET":
+      return {
+        count: 0,
+        isCounting: false,
+      };
+    case "TICK":
+      return {
+        ...state,
+        count: state.count + 1,
+      };
+    default:
+      return state;
+  }
+};
 
 function setDefaultValue() {
   const userCount = localStorage.getItem("count");
@@ -8,52 +33,50 @@ function setDefaultValue() {
 }
 
 function Timer() {
-  const [count, setCount] = useState(setDefaultValue());
-  const [isCounting, setIsCounting] = useState(false);
-  const timerIdRef = useRef(null);
-
-const handleStart = () => {
-    setIsCounting(true);
-  };
-
-  const handleStop = () => {
-    setIsCounting(false);
-  };
-
-  const handleReset = () => {
-    setCount(0);
-    setIsCounting(false);
-  };
+  const [{ count, isCounting }, dispatch] = useReducer(countReduser, {
+    count: setDefaultValue(),
+    isCounting: false,
+  });
 
   useEffect(() => {
     localStorage.setItem("count", count);
   }, [count]);
 
   useEffect(() => {
+    let timerId = null;
     if (isCounting) {
-      timerIdRef.current = setInterval(() => {
-        setCount((prevCount) => prevCount + 1);
+      timerId = setInterval(() => {
+        dispatch({ type: "TICK" });
       }, 1000);
-    }   
-    return () => clearInterval(timerIdRef.current);
+    }
+    return () => {
+      timerId && clearInterval(timerId);
+      timerId = null;
+    };
   }, [isCounting]);
 
   return (
     <div className="timer">
-      <h1>React Timer hooks</h1>
+      <h1>React timer hooks</h1>
       <h2>{count}</h2>
       {!isCounting ? (
-        <button onClick={handleStart} className="btn btn-primary">
+        <button
+          onClick={() => dispatch({ type: "START" })}
+          className="btn btn-primary"
+        >
           Start
         </button>
       ) : (
-        <button onClick={handleStop} className="btn btn-danger">
+        <button
+          onClick={() => dispatch({ type: "STOP" })}
+          className="btn btn-danger"
+        >
           Stop
         </button>
       )}
 
       <button
-        onClick={handleReset}
+        onClick={() => dispatch({ type: "RESET" })}
         className="btn btn-warning"
         style={{ marginLeft: "2rem" }}
       >
